@@ -1,0 +1,10 @@
+streamlit
+pandas
+openpyxl
+mlxtend
+plotly
+networkx
+pyvis
+seaborn
+matplotlib
+scipy
