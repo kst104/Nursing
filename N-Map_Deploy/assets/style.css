@@ -1,0 +1,48 @@
+/* Main Background */
+.stApp {
+    background-color: #F8FAFB;
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: #FFFFFF;
+    border-right: 1px solid #E0E0E0;
+}
+
+/* Titles and Headers */
+h1, h2, h3 {
+    color: #1A374D !important;
+    font-weight: 700;
+}
+
+/* Buttons */
+.stButton > button {
+    background-color: #406882;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+.stButton > button:hover {
+    background-color: #1A374D;
+    color: white;
+}
+
+/* Cards / Metric Containers */
+[data-testid="stMetricValue"] {
+    color: #406882;
+}
+
+/* Dataframes */
+.stDataFrame {
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+}
+
+/* Custom Highlight Classes */
+.highlight-text {
+    color: #406882;
+    font-weight: bold;
+}
