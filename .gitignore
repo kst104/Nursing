@@ -13,3 +13,8 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+
+# 인증 비밀키 — 절대 커밋 금지
+.streamlit/secrets.toml
+**/.streamlit/secrets.toml
+!**/.streamlit/secrets.toml.example
