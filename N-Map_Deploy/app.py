@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import tempfile
 import streamlit.components.v1 as components
-from modules import preprocessing, mining, visualization
+from modules import preprocessing, mining, visualization, auth
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -26,8 +26,13 @@ except FileNotFoundError:
 # --- Font Configuration ---
 visualization.configure_fonts()
 
+# --- Authentication Gate ---
+# 임상 데이터를 다루므로 로그인하지 않으면 여기서 실행이 중단된다.
+auth.require_login()
+
 # --- Sidebar ---
 with st.sidebar:
+    auth.render_user_box()
     st.image("https://via.placeholder.com/150x50?text=N-Map", use_container_width=True) # Placeholder Logo
     st.title("N-Map 분석 도구")
     st.markdown("---")
