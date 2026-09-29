@@ -4,11 +4,13 @@
 - 추가: [+ 파일] 버튼, 또는 탐색기에서 끌어다 놓기(tkinterdnd2 설치 시).
 - 더블클릭: 파일 열기 / 우클릭: 열기·폴더에서 보기·게시판에서 떼기
 - 상단 제목줄을 끌면 위치 이동, 우클릭하면 메뉴(항상 위, 위치 초기화, 종료).
-- 게시한 목록은 사용자 폴더에 저장되어 다시 켜도 유지됩니다.
+- 게시한 목록·위치는 사용자 폴더에 저장되어 다시 켜도 유지됩니다.
+- 윈도우 로그인 시 자동 실행되도록 스스로 등록합니다(제목줄 우클릭 메뉴에서 끌 수 있음).
 """
 
 import json
 import os
+import socket
 import subprocess
 import sys
 import tkinter as tk
@@ -47,6 +49,37 @@ if sys.platform == "win32":
 else:
     DATA_DIR = os.path.join(os.path.expanduser("~"), ".deskboard")
 DATA_FILE = os.path.join(DATA_DIR, "board.json")
+
+RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+RUN_NAME = "DeskBoard"
+
+
+def autostart_command():
+    """콘솔 창 없이 이 스크립트를 실행하는 명령 (pythonw 우선)."""
+    exe = sys.executable
+    pyw = os.path.join(os.path.dirname(exe), "pythonw.exe")
+    if os.path.exists(pyw):
+        exe = pyw
+    return f'"{exe}" "{os.path.abspath(__file__)}"'
+
+
+def set_autostart(enabled):
+    """윈도우 로그인 시 자동 실행 등록/해제 (HKCU Run, 관리자 권한 불필요)."""
+    if sys.platform != "win32":
+        return False
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as key:
+            if enabled:
+                winreg.SetValueEx(key, RUN_NAME, 0, winreg.REG_SZ, autostart_command())
+            else:
+                try:
+                    winreg.DeleteValue(key, RUN_NAME)
+                except FileNotFoundError:
+                    pass
+        return True
+    except OSError:
+        return False
 
 
 def primary_work_area(root):
@@ -91,6 +124,9 @@ class DeskBoard:
         self.files = self.state.get("files", [])[:MAX_FILES]
         self.topmost = self.state.get("topmost", False)
         self.root.attributes("-topmost", self.topmost)
+        # 기본값: 자동 실행 켜짐. 실행할 때마다 현재 경로로 다시 등록해 폴더를 옮겨도 유지됨.
+        self.autostart = self.state.get("autostart", True)
+        set_autostart(self.autostart)
 
         self.board_w = COLS * TILE_W + (COLS + 1) * GAP
         self.board_h = ROWS * TILE_H + (ROWS + 1) * GAP
@@ -113,10 +149,16 @@ class DeskBoard:
         data = {
             "files": self.files,
             "topmost": self.topmost,
+            "autostart": self.autostart,
             "pos": self.state.get("pos"),
         }
-        with open(DATA_FILE, "w", encoding="utf-8") as f:
+        # 임시 파일에 쓴 뒤 교체: 저장 중 전원이 꺼져도 기존 목록이 깨지지 않음
+        tmp = DATA_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, DATA_FILE)
 
     # ---------- 화면 구성 ----------
     def build(self):
@@ -290,6 +332,9 @@ class DeskBoard:
     def header_menu(self, event):
         m = tk.Menu(self.root, tearoff=0)
         m.add_command(label=("✓ " if self.topmost else "   ") + "항상 위에 표시", command=self.toggle_topmost)
+        if sys.platform == "win32":
+            m.add_command(label=("✓ " if self.autostart else "   ") + "윈도우 시작 시 자동 실행",
+                          command=self.toggle_autostart)
         m.add_command(label="우측 상단으로 위치 초기화", command=self.reset_position)
         m.add_separator()
         m.add_command(label="모두 떼기", command=self.clear_all)
@@ -300,6 +345,13 @@ class DeskBoard:
         self.topmost = not self.topmost
         self.root.attributes("-topmost", self.topmost)
         self.save()
+
+    def toggle_autostart(self):
+        if set_autostart(not self.autostart):
+            self.autostart = not self.autostart
+            self.save()
+        else:
+            messagebox.showerror("게시판", "자동 실행 설정을 바꾸지 못했습니다.", parent=self.root)
 
     def reset_position(self):
         self.state["pos"] = None
@@ -320,5 +372,17 @@ class DeskBoard:
         self.root.mainloop()
 
 
+def already_running():
+    """중복 실행 방지: 로컬 포트를 선점한 인스턴스가 있으면 True."""
+    global _lock_sock
+    _lock_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        _lock_sock.bind(("127.0.0.1", 47823))
+        return False
+    except OSError:
+        return True
+
+
 if __name__ == "__main__":
-    DeskBoard().run()
+    if not already_running():
+        DeskBoard().run()
