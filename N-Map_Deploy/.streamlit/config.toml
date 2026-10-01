@@ -1,0 +1,23 @@
+# N-Map — Stripe-inspired design system
+# Run locally:  streamlit run app.py       (serves on http://localhost:8910)
+
+[server]
+port = 8910
+headless = true
+# Serves ./static at /app/static — used for the self-hosted Pretendard font
+enableStaticServing = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+# Stripe Purple — primary CTA / interactive colour
+primaryColor = "#533afd"
+# Pure white canvas
+backgroundColor = "#ffffff"
+# Soft blue surface for sidebar, inputs and code blocks
+secondaryBackgroundColor = "#f6f9fc"
+# Deep navy body text
+textColor = "#061b31"
+font = "sans serif"

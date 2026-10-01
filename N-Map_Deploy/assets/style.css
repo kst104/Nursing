@@ -1,48 +1,561 @@
-/* Main Background */
+/* ==========================================================================
+   N-Map — Stripe-inspired design system
+   Reference: ./DESIGN.md  (Design System: Stripe)
+
+   sohne-var is proprietary, so Pretendard Variable stands in: it shares the
+   geometric, low-contrast grotesque skeleton, ships a true 300 weight and —
+   unlike Inter or SF — covers Hangul, which this UI is written in.
+   Tabular numerals ("tnum") are supported and used for every figure.
+
+   The font is self-hosted from ./static (OFL-1.1, see LICENSE-Pretendard.txt)
+   so the UI keeps its typography on networks that block public CDNs.
+   ========================================================================== */
+
+@font-face {
+    font-family: "Pretendard Variable";
+    font-weight: 45 920;
+    font-style: normal;
+    font-display: swap;
+    src: url("app/static/PretendardVariable.woff2") format("woff2-variations"),
+         url("app/static/PretendardVariable.woff2") format("woff2");
+}
+@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@500;700&display=swap");
+
+:root {
+    /* --- Brand ------------------------------------------------------- */
+    --stripe-purple:        #533afd;
+    --stripe-purple-hover:  #4434d4;
+    --stripe-purple-deep:   #2e2b8c;
+    --stripe-purple-light:  #b9b9f9;
+    --stripe-purple-soft:   #d6d9fc;
+    --brand-dark:           #1c1e54;
+
+    /* --- Text -------------------------------------------------------- */
+    --heading:              #061b31;
+    --label:                #273951;
+    --body:                 #64748d;
+
+    /* --- Surface ----------------------------------------------------- */
+    --surface:              #ffffff;
+    --surface-subtle:       #f6f9fc;
+    --border:               #e5edf5;
+
+    /* --- Status ------------------------------------------------------ */
+    --success:              #15be53;
+    --success-text:         #108c3d;
+    --ruby:                 #ea2261;
+    --magenta:              #f96bee;
+    --magenta-light:        #ffd7ef;
+    --lemon:                #9b6829;
+
+    /* --- Elevation (blue-tinted, multi-layer) ------------------------ */
+    --shadow-ambient:  rgba(23,23,23,0.06) 0px 3px 6px;
+    --shadow-standard: rgba(23,23,23,0.08) 0px 15px 35px 0px;
+    --shadow-elevated: rgba(50,50,93,0.25) 0px 30px 45px -30px,
+                       rgba(0,0,0,0.10)    0px 18px 36px -18px;
+    --shadow-deep:     rgba(3,3,39,0.25)   0px 14px 21px -14px,
+                       rgba(0,0,0,0.10)    0px  8px 17px  -8px;
+
+    /* --- Type -------------------------------------------------------- */
+    --font-sans: "Pretendard Variable", Pretendard, "SF Pro Display",
+                 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-mono: "Source Code Pro", SFMono-Regular, Menlo, monospace;
+}
+
+/* ==========================================================================
+   1. Canvas & base type
+   ========================================================================== */
+
+html, body, .stApp, [class*="css"] {
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01";
+}
+
 .stApp {
-    background-color: #F8FAFB;
-    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    background-color: var(--surface);
+    color: var(--body);
 }
 
-/* Sidebar */
+/* Weight 300 is the brand voice — lightness as luxury, not timidity. */
+.stApp, .stMarkdown, .stMarkdown p, [data-testid="stMarkdownContainer"] p {
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.40;
+    color: var(--body);
+}
+
+.block-container {
+    max-width: 1080px;
+    padding-top: 2.5rem;
+    padding-bottom: 5rem;
+}
+
+/* Streamlit's own toolbar fades into the white canvas */
+header[data-testid="stHeader"] {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+}
+
+/* ==========================================================================
+   2. Headings — weight 300, deep navy, progressive negative tracking
+   ========================================================================== */
+
+h1, h2, h3, h4, h5, h6,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3 {
+    color: var(--heading) !important;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01";
+    font-weight: 300 !important;
+}
+
+h1 { font-size: 3.00rem; line-height: 1.15; letter-spacing: -0.96px; }
+h2 { font-size: 2.00rem; line-height: 1.10; letter-spacing: -0.64px; margin-top: 3rem; }
+h3 { font-size: 1.63rem; line-height: 1.12; letter-spacing: -0.26px; }
+h4 { font-size: 1.38rem; line-height: 1.10; letter-spacing: -0.22px; }
+
+strong, b { font-weight: 500; color: var(--label); }
+a, a:visited { color: var(--stripe-purple); text-decoration: none; font-weight: 400; }
+a:hover { color: var(--stripe-purple-hover); text-decoration: underline; }
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+/* ==========================================================================
+   3. Hero & landing composition (markup lives in app.py)
+   ========================================================================== */
+
+.nmap-hero {
+    padding: 1rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+}
+
+.nmap-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 2.00;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--stripe-purple);
+}
+
+.nmap-hero h1 {
+    display: inline-block;   /* gradient spans the text, not the column */
+    font-size: 3.50rem;
+    line-height: 1.03;
+    letter-spacing: -1.4px;
+    font-weight: 300 !important;
+    margin: 0.25rem 0 1.25rem;
+    /* Ruby → magenta → purple, the one place decorative accents belong */
+    background: linear-gradient(94deg, var(--heading) 28%, var(--stripe-purple) 64%, var(--ruby) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nmap-sub {
+    font-size: 1.13rem;
+    font-weight: 300;
+    line-height: 1.40;
+    color: var(--body);
+    max-width: 46rem;
+    margin: 0;
+}
+
+.nmap-wordmark {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.38rem;
+    font-weight: 500;
+    letter-spacing: -0.22px;
+    color: var(--heading);
+    padding: 0.25rem 0 1.25rem;
+}
+.nmap-wordmark .dot {
+    width: 0.625rem; height: 0.625rem; border-radius: 1px;
+    background: linear-gradient(135deg, var(--stripe-purple), var(--magenta));
+}
+
+/* Feature grid */
+.nmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin: 2rem 0;
+}
+.nmap-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-ambient);
+    transition: box-shadow 160ms ease, transform 160ms ease;
+}
+.nmap-card:hover {
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-2px);
+}
+.nmap-card h4 {
+    font-size: 1.38rem; font-weight: 300; letter-spacing: -0.22px;
+    color: var(--heading); margin: 0 0 0.5rem;
+}
+.nmap-card p { font-size: 1rem; font-weight: 300; line-height: 1.40; color: var(--body); margin: 0; }
+.nmap-card .idx {
+    font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;
+    line-height: 2.00; color: var(--stripe-purple);
+}
+
+/* Full-width dark brand section — the light/dark cadence */
+.nmap-dark {
+    background: var(--brand-dark);
+    border-radius: 8px;
+    padding: 2.5rem;
+    margin: 3rem 0 1rem;
+    box-shadow: var(--shadow-elevated);
+}
+.nmap-dark h3 {
+    color: #ffffff !important;
+    font-size: 2.00rem; font-weight: 300; letter-spacing: -0.64px;
+    margin: 0 0 1rem;
+}
+.nmap-dark p, .nmap-dark li { color: rgba(255,255,255,0.70); font-weight: 300; line-height: 1.40; }
+.nmap-dark strong { color: #ffffff; font-weight: 400; }
+.stMarkdown .nmap-dark code {
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 4px;
+    color: var(--stripe-purple-light);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 1px 6px;
+}
+
+/* Sign-in card (modules/auth.py) */
+.nmap-login { padding: 4rem 0 1.5rem; }
+.nmap-login .nmap-wordmark { padding-bottom: 2rem; }
+.nmap-login h1 {
+    font-size: 2.00rem; line-height: 1.10; letter-spacing: -0.64px;
+    font-weight: 300 !important; margin: 0 0 0.5rem;
+}
+.nmap-login .nmap-sub { font-size: 1rem; }
+/* st.container(key="nmap_login_card") → .st-key-nmap_login_card (Streamlit >= 1.42) */
+.st-key-nmap_login_card {
+    background: var(--surface);
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    padding: 1.5rem !important;
+    box-shadow: var(--shadow-elevated);
+}
+
+/* Success / neutral pills */
+.nmap-badge {
+    display: inline-block;
+    background: rgba(21,190,83,0.2);
+    color: var(--success-text);
+    border: 1px solid rgba(21,190,83,0.4);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.625rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1024px) { .nmap-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+    .nmap-grid { grid-template-columns: 1fr; }
+    .nmap-hero h1 { font-size: 2.00rem; letter-spacing: -0.64px; }
+    .nmap-dark { padding: 1.5rem; }
+    .block-container { padding-top: 1.5rem; }
+}
+
+/* ==========================================================================
+   4. Sidebar — soft blue surface, 14px/400 labels
+   ========================================================================== */
+
 [data-testid="stSidebar"] {
-    background-color: #FFFFFF;
-    border-right: 1px solid #E0E0E0;
+    background-color: var(--surface-subtle);
+    border-right: 1px solid var(--border);
+}
+[data-testid="stSidebar"] .block-container { padding-top: 1.5rem; }
+[data-testid="stSidebar"] h1 {
+    font-size: 1.38rem; letter-spacing: -0.22px; font-weight: 400 !important;
+}
+[data-testid="stSidebar"] h3 {
+    font-size: 0.8125rem; font-weight: 500 !important; letter-spacing: 0;
+    color: var(--label) !important;
+    padding-top: 0.5rem;
+}
+[data-testid="stSidebar"] label,
+[data-testid="stWidgetLabel"] label p {
+    color: var(--label) !important;
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
 }
 
-/* Titles and Headers */
-h1, h2, h3 {
-    color: #1A374D !important;
-    font-weight: 700;
-}
+/* ==========================================================================
+   5. Buttons — 4px radius, 8px/16px padding, weight 400. Never pill-shaped.
+   ========================================================================== */
 
-/* Buttons */
-.stButton > button {
-    background-color: #406882;
-    color: white;
-    border-radius: 8px;
+.stButton > button,
+[data-testid="stDownloadButton"] > button,
+[data-testid="stBaseButton-secondary"],
+[data-testid="stFormSubmitButton"] > button {
+    background-color: var(--stripe-purple);
+    color: #ffffff;
     border: none;
-    padding: 0.5rem 1rem;
-    font-weight: 600;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01";
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.00;
+    box-shadow: var(--shadow-ambient);
+    transition: background-color 140ms ease, box-shadow 140ms ease;
 }
-.stButton > button:hover {
-    background-color: #1A374D;
-    color: white;
+.stButton > button:hover,
+[data-testid="stDownloadButton"] > button:hover,
+[data-testid="stBaseButton-secondary"]:hover,
+[data-testid="stFormSubmitButton"] > button:hover {
+    background-color: var(--stripe-purple-hover);
+    color: #ffffff;
+    border: none;
+    box-shadow: var(--shadow-standard);
+}
+.stButton > button:focus-visible,
+[data-testid="stDownloadButton"] > button:focus-visible {
+    outline: 2px solid var(--stripe-purple);
+    outline-offset: 2px;
+    box-shadow: none;
 }
 
-/* Cards / Metric Containers */
+/* Button labels render inside a markdown <p>; keep them on the button's colour */
+.stButton button p,
+[data-testid="stDownloadButton"] button p,
+[data-testid="stFormSubmitButton"] button p,
+[data-testid="stFileUploaderDropzone"] button p,
+[data-testid="stFileUploaderDropzone"] button span {
+    color: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    line-height: inherit;
+}
+
+/* Ghost variant for the download action */
+[data-testid="stDownloadButton"] > button {
+    background-color: transparent;
+    color: var(--stripe-purple);
+    border: 1px solid var(--stripe-purple-light);
+}
+[data-testid="stDownloadButton"] > button:hover {
+    background-color: rgba(83,58,253,0.05);
+    color: var(--stripe-purple-hover);
+    border: 1px solid var(--stripe-purple-light);
+}
+
+/* ==========================================================================
+   6. Inputs, sliders, uploader
+   ========================================================================== */
+
+[data-baseweb="input"], [data-baseweb="select"] > div,
+[data-testid="stNumberInputContainer"] {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    color: var(--heading) !important;
+}
+[data-baseweb="input"]:focus-within,
+[data-testid="stNumberInputContainer"]:focus-within {
+    border-color: var(--stripe-purple) !important;
+    box-shadow: 0 0 0 1px var(--stripe-purple);
+}
+input::placeholder { color: var(--body) !important; }
+
+/* Slider: purple track and handle, tabular value readout */
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
+    background-color: var(--stripe-purple) !important;
+    box-shadow: var(--shadow-ambient);
+}
+[data-testid="stSlider"] [data-testid="stThumbValue"],
+[data-testid="stSlider"] [data-testid="stTickBarMin"],
+[data-testid="stSlider"] [data-testid="stTickBarMax"] {
+    color: var(--body) !important;
+    font-size: 0.75rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.36px;
+}
+
+/* Drop zone: 1px dashed purple, straight from the spec */
+[data-testid="stFileUploaderDropzone"],
+[data-testid="stFileUploader"] section {
+    background-color: var(--surface) !important;
+    border: 1px dashed var(--stripe-purple-deep) !important;
+    border-radius: 6px !important;
+    color: var(--body) !important;
+}
+[data-testid="stFileUploaderDropzone"]:hover {
+    background-color: rgba(83,58,253,0.03) !important;
+}
+[data-testid="stFileUploaderDropzone"] button {
+    background: transparent !important;
+    color: var(--stripe-purple) !important;
+    border: 1px solid var(--stripe-purple-light) !important;
+    border-radius: 4px !important;
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    padding: 8px 16px !important;
+}
+
+/* ==========================================================================
+   7. Metrics — dense data inside generous chrome
+   ========================================================================== */
+
+[data-testid="stMetric"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow-ambient);
+}
+[data-testid="stMetricLabel"] p {
+    color: var(--body) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 400 !important;
+}
 [data-testid="stMetricValue"] {
-    color: #406882;
+    color: var(--heading) !important;
+    font-size: 2.00rem !important;
+    font-weight: 300 !important;
+    letter-spacing: -0.64px;
+    /* tnum — figures in a data display never use ss01 */
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+/* Streamlit wraps the value in a markdown <p>; let it inherit the display size */
+[data-testid="stMetricValue"] p,
+[data-testid="stMetricValue"] div {
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    color: inherit !important;
+    letter-spacing: inherit;
+    line-height: 1.10;
 }
 
-/* Dataframes */
-.stDataFrame {
-    border: 1px solid #E0E0E0;
-    border-radius: 8px;
+/* ==========================================================================
+   8. Tabs, expanders, tables, alerts
+   ========================================================================== */
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+}
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    border-radius: 6px 6px 0 0;
+    padding: 8px 16px;
+    color: var(--body);
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+.stTabs [aria-selected="true"] {
+    color: var(--stripe-purple) !important;
+    background: rgba(83,58,253,0.04);
+}
+.stTabs [data-baseweb="tab-highlight"] { background-color: var(--stripe-purple); }
+.stTabs [data-baseweb="tab-panel"] { padding-top: 1.5rem; }
+
+[data-testid="stExpander"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: var(--shadow-ambient);
+}
+[data-testid="stExpander"] summary { color: var(--label); font-size: 0.875rem; font-weight: 400; }
+[data-testid="stExpander"] summary:hover { color: var(--stripe-purple); }
+
+.stDataFrame, [data-testid="stDataFrame"], [data-testid="stTable"] {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow-ambient);
+    font-variant-numeric: tabular-nums;
 }
 
-/* Custom Highlight Classes */
-.highlight-text {
-    color: #406882;
-    font-weight: bold;
+/* Alerts keep purple as the only interactive hue; status colours stay semantic */
+[data-testid="stAlertContainer"] {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--stripe-purple);
+    border-radius: 6px;
+    box-shadow: var(--shadow-ambient);
+    padding: 0.875rem 1.125rem;
 }
+[data-testid^="stAlertContent"],
+[data-testid^="stAlertContent"] * {
+    background: transparent !important;
+}
+[data-testid^="stAlertContent"] p,
+[data-testid^="stAlertContent"] li {
+    color: var(--label) !important;
+    font-size: 0.9375rem;
+    font-weight: 300;
+    line-height: 1.40;
+}
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentSuccess"]) {
+    background-color: rgba(21,190,83,0.06) !important;
+    border-left-color: var(--success);
+}
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentSuccess"]) p { color: var(--success-text) !important; }
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentWarning"]) {
+    background-color: rgba(155,104,41,0.05) !important;
+    border-left-color: var(--lemon);
+}
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentError"]) {
+    background-color: rgba(234,34,97,0.04) !important;
+    border-left-color: var(--ruby);
+}
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentError"]) p { color: var(--ruby) !important; }
+
+/* Code: SourceCodePro 12px/500 with the spec's generous 2.0 leading */
+code, pre, [data-testid="stCodeBlock"] code {
+    font-family: var(--font-mono) !important;
+    font-size: 0.75rem !important;
+    font-weight: 500;
+    line-height: 2.00;
+}
+.stMarkdown code {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--stripe-purple-deep);
+    padding: 1px 6px;
+}
+
+/* Fenced code blocks: one surface — the inline-code chip must not repeat inside <pre> */
+.stMarkdown pre, [data-testid="stCodeBlock"] pre {
+    background: var(--surface-subtle) !important;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+.stMarkdown pre code, [data-testid="stCodeBlock"] code {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    color: var(--heading);
+}
+
+/* Spinner and progress inherit the brand purple */
+.stSpinner > div { border-top-color: var(--stripe-purple) !important; }
+[data-testid="stProgressBar"] > div > div > div { background-color: var(--stripe-purple); }
+
+/* Keyboard focus ring — accessibility level from the elevation table */
+*:focus-visible { outline: 2px solid var(--stripe-purple); outline-offset: 2px; }
+
+/* Legacy helper retained from the previous stylesheet */
+.highlight-text { color: var(--stripe-purple); font-weight: 400; }

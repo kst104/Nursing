@@ -29,7 +29,7 @@ Streamlit 네이티브 인증(`st.login()` / `st.user` / `st.logout()`)을 사�
 3. **API 및 서비스 → 사용자 인증 정보 → 사용자 인증 정보 만들기 → OAuth 클라이언트 ID**
    - 애플리케이션 유형: **웹 애플리케이션**
    - **승인된 리디렉션 URI** 에 아래를 등록 (2단계의 `redirect_uri`와 **문자 하나까지 똑같아야** 합니다)
-     - 로컬 개발: `http://localhost:8501/oauth2callback`
+     - 로컬 개발: `http://localhost:8910/oauth2callback`
      - 배포본: `https://<앱주소>/oauth2callback`
 4. 발급된 **클라이언트 ID**와 **클라이언트 보안 비밀번호**를 복사
 
@@ -52,7 +52,7 @@ python -c "import secrets; print(secrets.token_hex(32))"   # cookie_secret 생�
 
 ```toml
 [auth]
-redirect_uri = "http://localhost:8501/oauth2callback"
+redirect_uri = "http://localhost:8910/oauth2callback"
 cookie_secret = "위에서 생성한 랜덤 문자열"
 
 [auth.google]
@@ -79,6 +79,8 @@ allowed_emails = ["nurse.kim@gmail.com"]      # 개별 계정 허용
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+앱은 `.streamlit/config.toml` 의 `server.port = 8910` 에 따라 http://localhost:8910 에서 열립니다. 포트를 바꾸면 공급자에 등록한 리디렉션 URI 와 `redirect_uri` 도 함께 바꿔야 합니다.
 
 로그인 화면이 뜨고, 인가된 계정으로 들어가면 사이드바 상단에 이름과 **로그아웃** 버튼이 보입니다.
 

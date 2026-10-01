@@ -18,3 +18,6 @@ venv/
 .streamlit/secrets.toml
 **/.streamlit/secrets.toml
 !**/.streamlit/secrets.toml.example
+
+# pyvis 가 네트워크 그래프를 그릴 때 실행 디렉터리에 만드는 JS 사본
+N-Map_Deploy/lib/

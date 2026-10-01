@@ -108,7 +108,7 @@ def _render_setup_help():
 
         ```toml
         [auth]
-        redirect_uri = "http://localhost:8501/oauth2callback"
+        redirect_uri = "http://localhost:8910/oauth2callback"
         cookie_secret = "<python -c \\"import secrets;print(secrets.token_hex(32))\\" 결과>"
 
         [auth.google]
@@ -127,27 +127,37 @@ def _render_setup_help():
 
 
 def _render_login_screen():
-    st.title("🏥 N-Map")
-    st.markdown("간호 연관성 분석 도구입니다. 계속하려면 로그인하세요.")
-    st.divider()
+    # 가운데 좁은 카드 — assets/style.css 의 .nmap-login 참고
+    _, center, _ = st.columns([1, 1.25, 1])
+    with center:
+        st.markdown(
+            """
+            <div class="nmap-login">
+                <div class="nmap-wordmark"><span class="dot"></span>N-Map</div>
+                <h1>로그인</h1>
+                <p class="nmap-sub">간호 연관성 분석 도구입니다. 계속하려면 로그인하세요.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        with st.container(border=True, key="nmap_login_card"):
+            providers = _configured_providers()
+            if not providers:
+                # 단일 공급자 설정
+                st.button("로그인", type="primary", on_click=st.login, use_container_width=True)
+            else:
+                for provider in providers:
+                    label = PROVIDER_LABELS.get(provider, f"{provider} 계정으로 로그인")
+                    st.button(
+                        label,
+                        key=f"login_{provider}",
+                        type="primary",
+                        use_container_width=True,
+                        on_click=st.login,
+                        args=(provider,),
+                    )
 
-    providers = _configured_providers()
-    if not providers:
-        # 단일 공급자 설정
-        st.button("로그인", type="primary", on_click=st.login, use_container_width=True)
-    else:
-        for provider in providers:
-            label = PROVIDER_LABELS.get(provider, f"{provider} 계정으로 로그인")
-            st.button(
-                label,
-                key=f"login_{provider}",
-                type="primary",
-                use_container_width=True,
-                on_click=st.login,
-                args=(provider,),
-            )
-
-    st.caption("인가된 계정만 접근할 수 있습니다. 접근 권한이 필요하면 관리자에게 문의하세요.")
+            st.caption("인가된 계정만 접근할 수 있습니다. 접근 권한이 필요하면 관리자에게 문의하세요.")
 
 
 def _render_denied(user_email):
@@ -166,7 +176,7 @@ def require_login():
     if not is_configured():
         if _allow_anonymous():
             st.warning(
-                "⚠️ 인증이 꺼진 상태로 실행 중입니다(NMAP_ALLOW_ANONYMOUS=1). "
+                "인증이 꺼진 상태로 실행 중입니다(NMAP_ALLOW_ANONYMOUS=1). "
                 "실제 환자 데이터로는 사용하지 마세요.",
                 icon="⚠️",
             )
