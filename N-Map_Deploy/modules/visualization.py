@@ -46,6 +46,24 @@ def truncate_label(text, limit=15):
         return text[:limit] + ".."
     return text
 
+# --- Stripe palette (see ../DESIGN.md) -------------------------------------
+STRIPE_PURPLE = '#533afd'
+STRIPE_NAVY = '#061b31'
+STRIPE_PURPLE_LIGHT = '#b9b9f9'
+STRIPE_PURPLE_SOFT = '#d6d9fc'
+STRIPE_BORDER = '#e5edf5'
+STRIPE_BODY = '#64748d'
+STRIPE_FONT = 'Pretendard Variable, Pretendard, SF Pro Display, sans-serif'
+# Sequential scale from the soft lavender surface up to the brand purple
+STRIPE_SCALE = [
+    [0.00, '#f6f9fc'],
+    [0.25, '#d6d9fc'],
+    [0.50, '#b9b9f9'],
+    [0.75, '#665efd'],
+    [1.00, '#2e2b8c'],
+]
+
+
 def create_network_graph(rules):
     """
     Creates an interactive network graph using PyVis.
@@ -56,7 +74,7 @@ def create_network_graph(rules):
         return None
 
     # Initialize Network (Increased height)
-    net = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='black')
+    net = Network(height='750px', width='100%', bgcolor='#ffffff', font_color=STRIPE_NAVY)
     
     # Add nodes and edges
     for _, row in rules.iterrows():
@@ -73,11 +91,11 @@ def create_network_graph(rules):
         # Add nodes if not exist
         # Use full name as ID to link edges correctly
         # title argument provides the tooltip on hover
-        net.add_node(src, label=src_label, title=src, color='#1A374D', shape='dot') 
-        net.add_node(dst, label=dst_label, title=dst, color='#406882', shape='dot') 
+        net.add_node(src, label=src_label, title=src, color=STRIPE_NAVY, shape='dot') 
+        net.add_node(dst, label=dst_label, title=dst, color=STRIPE_PURPLE, shape='dot') 
         
         # Add edge
-        net.add_edge(src, dst, value=weight, title=f"향상도(Lift): {weight:.2f}\n신뢰도(Conf): {conf:.2f}", color='#B1D0E0')
+        net.add_edge(src, dst, value=weight, title=f"향상도(Lift): {weight:.2f}\n신뢰도(Conf): {conf:.2f}", color=STRIPE_PURPLE_LIGHT)
 
     # Physics options for better layout
     net.force_atlas_2based()
@@ -144,23 +162,26 @@ def create_sankey_diagram(df):
         node = dict(
           pad = 15,
           thickness = 20,
-          line = dict(color = "black", width = 0.5),
+          line = dict(color = STRIPE_BORDER, width = 0.5),
           label = labels,
           customdata = full_labels,
           hovertemplate='%{customdata}<br>빈도: %{value}<extra></extra>',
-          color = "#406882"
+          color = STRIPE_PURPLE
         ),
         link = dict(
           source = sources,
           target = targets,
           value = values,
-          color = "#B1D0E0" 
+          color = STRIPE_PURPLE_SOFT
       ))])
 
     fig.update_layout(
-        title_text="환자 흐름 (연령 → 수술시간 → 간호중재 [상위 15개])", 
-        font_size=12,
-        height=700  # Increased height
+        title_text="환자 흐름 (연령 → 수술시간 → 간호중재 [상위 15개])",
+        height=700,  # Increased height
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#ffffff',
+        font=dict(family=STRIPE_FONT, size=12, color=STRIPE_BODY),
+        title_font=dict(family=STRIPE_FONT, size=22, color=STRIPE_NAVY),
     )
     return fig
 
@@ -191,8 +212,8 @@ def create_heatmap(df):
         x=short_labels, # Use truncated labels
         y=ct.index,
         customdata=full_labels, # Store full labels
-        colorscale='Blues',
-        colorbar=dict(title='빈도'),
+        colorscale=STRIPE_SCALE,
+        colorbar=dict(title='빈도', outlinewidth=0, tickfont=dict(family=STRIPE_FONT)),
         hovertemplate='<b>수술시간</b>: %{y}<br><b>간호중재</b>: %{customdata}<br><b>빈도</b>: %{z}회<extra></extra>' # Show full label on hover
     ))
     
@@ -200,8 +221,12 @@ def create_heatmap(df):
         title='수술 시간 유형별 주요 간호중재 빈도 (상위 20개)',
         xaxis_title='간호중재 (주요 항목)',
         yaxis_title='수술 시간 유형',
-        height=750, # Increased height significantly
-        xaxis=dict(tickangle=-45) # Rotate labels for better readability
+        height=750,  # Increased height significantly
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#ffffff',
+        font=dict(family=STRIPE_FONT, size=12, color=STRIPE_BODY),
+        title_font=dict(family=STRIPE_FONT, size=22, color=STRIPE_NAVY),
+        xaxis=dict(tickangle=-45)  # Rotate labels for better readability
     )
     
     return fig

@@ -3,14 +3,14 @@ import pandas as pd
 import os
 import tempfile
 import streamlit.components.v1 as components
-from modules import preprocessing, mining, visualization
+from modules import preprocessing, mining, visualization, auth
 
 # --- Page Configuration ---
 st.set_page_config(
     page_title="N-Map: Nursing Association Mining",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"  # expanded on desktop, collapsed on phones
 )
 
 # --- Load Custom CSS ---
@@ -21,15 +21,22 @@ def local_css(file_name):
 try:
     local_css("assets/style.css")
 except FileNotFoundError:
-    st.warning("CS file not found. Styling might be missing.")
+    st.warning("assets/style.css 를 찾을 수 없어 기본 스타일로 표시됩니다.")
 
 # --- Font Configuration ---
 visualization.configure_fonts()
 
+# --- Authentication Gate ---
+# 임상 데이터를 다루므로 로그인하지 않으면 여기서 실행이 중단된다.
+auth.require_login()
+
 # --- Sidebar ---
 with st.sidebar:
-    st.image("https://via.placeholder.com/150x50?text=N-Map", use_container_width=True) # Placeholder Logo
-    st.title("N-Map 분석 도구")
+    st.markdown(
+        '<div class="nmap-wordmark"><span class="dot"></span>N-Map</div>',
+        unsafe_allow_html=True,
+    )
+    auth.render_user_box()
     st.markdown("---")
     
     uploaded_file = st.file_uploader("임상 데이터 업로드 (xlsx/csv)", type=['xlsx', 'csv'])
@@ -43,8 +50,20 @@ with st.sidebar:
     st.info("지원 컬럼: 연령, 수술시간, 간호중재")
 
 # --- Main Content ---
-st.title("🏥 N-Map: 간호 연관성 분석 및 시각화")
-st.markdown("임상 간호 데이터 속의 숨겨진 패턴을 찾아 **근거 기반 간호(EBN)**를 위한 통찰력을 제공합니다.")
+st.markdown(
+    """
+    <div class="nmap-hero">
+        <span class="nmap-eyebrow">Nursing Association Mining</span>
+        <h1>임상 데이터 속<br>간호의 인과를 읽다</h1>
+        <p class="nmap-sub">
+            N-Map 은 연령 &middot; 수술시간 &middot; 간호중재의 연관 규칙을 찾아
+            근거 기반 간호(EBN)를 위한 통찰로 바꿉니다.
+            파일을 올리면 지지도 &middot; 신뢰도 &middot; 향상도까지 한 번에 계산됩니다.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 if uploaded_file is not None:
     # 1. Load & Preprocess Data
@@ -86,7 +105,7 @@ if uploaded_file is not None:
                         display_rules.columns = ['조건 (Antecedents)', '결과 (Consequents)', '지지도 (Support)', '신뢰도 (Confidence)', '향상도 (Lift)']
                         
                         st.dataframe(
-                            display_rules.head(10).style.highlight_max(axis=0, color='#d1e7dd'),
+                            display_rules.head(10).style.highlight_max(axis=0, color='#eeebff'),
                             use_container_width=True
                         )
                         
@@ -126,7 +145,7 @@ if uploaded_file is not None:
                             st.info("""
                             **💡 그래프 해석 가이드**
                             - **흐름(Flow)**: 왼쪽에서 오른쪽으로 이어지는 환자의 특성(연령 → 수술시간 → 간호중재)을 보여줍니다.
-                            - **굵기(Width)**: 해당 경로에 속하는 **환자의 수(빈도)**를 의미합니다. 굵을수록 해당 케이스가 많다는 뜻입니다.
+                            - **굵기(Width)**: 해당 경로에 속하는 **환자의 수**(빈도)를 의미합니다. 굵을수록 해당 케이스가 많다는 뜻입니다.
                             """)
                                 
                         with tab3:
@@ -159,28 +178,88 @@ if uploaded_file is not None:
             st.error("파일 로드 실패. 형식을 확인해주세요.")
 
 else:
-    # Landing Page State
+    # --- Landing Page State ------------------------------------------------
+    st.markdown(
+        """
+        <div class="nmap-grid">
+            <div class="nmap-card">
+                <div class="idx">01</div>
+                <h4>업로드</h4>
+                <p>사이드바에서 엑셀(.xlsx) 또는 CSV 파일을 올립니다.
+                   <strong>연령</strong>, <strong>수술시간</strong>,
+                   <strong>간호중재</strong> 컬럼만 있으면 됩니다.</p>
+            </div>
+            <div class="nmap-card">
+                <div class="idx">02</div>
+                <h4>파라미터</h4>
+                <p>지지도 &middot; 신뢰도 &middot; 향상도 임계값을 조절해
+                   찾아낼 규칙의 범위를 정합니다.</p>
+            </div>
+            <div class="nmap-card">
+                <div class="idx">03</div>
+                <h4>해석</h4>
+                <p>네트워크 &middot; Sankey &middot; 히트맵 세 가지 관점으로
+                   같은 규칙을 교차 확인합니다.</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.info("👈 사이드바에서 임상 데이터 파일(Excel/CSV)을 업로드하여 분석을 시작하세요.")
-    st.markdown("""
-    ### 권장 데이터 형식 (두 가지 모두 지원)
-    
-    **Type A: 기본 형식**
-    * **연령**: 환자 나이
-    * **수술시간**: 분 단위 숫자
-    * **간호중재**: "중재1, 중재2" 형태의 문자열
 
-    ### 📘 N-Map 사용 및 해석 가이드
-    
-    **1. 데이터 업로드**
-    좌측 사이드바에서 엑셀(.xlsx) 또는 CSV 파일을 업로드하세요.
-    
-    **2. 파라미터 이해하기**
-    * **지지도 (Support)**: 해당 패턴이 전체 데이터에서 얼마나 자주 등장하는지 (높을수록 흔한 패턴)
-    * **신뢰도 (Confidence)**: A가 발생했을 때 B가 발생할 확률 (높을수록 믿을 수 있는 규칙)
-    * **향상도 (Lift)**: A와 B가 우연히 같이 일어난 것보다 얼마나 더 밀접한지 (1보다 크면 양의 상관관계)
+    st.markdown(
+        """
+        <div class="nmap-dark">
+            <h3>파라미터가 뜻하는 것</h3>
+            <p><strong>지지도 (Support)</strong> &mdash;
+               해당 패턴이 전체 데이터에서 얼마나 자주 등장하는지.
+               높을수록 흔한 패턴입니다.</p>
+            <p><strong>신뢰도 (Confidence)</strong> &mdash;
+               A가 발생했을 때 B가 발생할 확률.
+               높을수록 믿을 수 있는 규칙입니다.</p>
+            <p><strong>향상도 (Lift)</strong> &mdash;
+               A와 B가 우연히 같이 일어난 것보다 얼마나 더 밀접한지.
+               <code>1</code> 보다 크면 양의 상관관계입니다.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    **3. 시각화 해석**
-    * **네트워크 그래프**: 간호중재 간의 복잡한 연결 관계를 파악합니다.
-    * **Sankey 다이어그램**: 환자 특성에 따른 간호중재의 흐름을 봅니다.
-    * **히트맵**: 수술 시간대별로 자주 하는 간호중재를 색상으로 비교합니다.
-    """) 
+    st.markdown("## 시각화 읽는 법")
+
+    st.markdown(
+        """
+        <div class="nmap-grid">
+            <div class="nmap-card">
+                <h4>네트워크 그래프</h4>
+                <p>간호중재 사이의 연결 관계를 봅니다.
+                   선이 굵을수록 연관성(Lift)이 강합니다.</p>
+            </div>
+            <div class="nmap-card">
+                <h4>Sankey 다이어그램</h4>
+                <p>연령 &rarr; 수술시간 &rarr; 간호중재로 이어지는
+                   환자의 흐름을 따라갑니다. 굵기는 환자 수입니다.</p>
+            </div>
+            <div class="nmap-card">
+                <h4>히트맵</h4>
+                <p>수술 시간대별로 자주 시행되는 중재를
+                   색의 농도로 비교합니다.</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("### 권장 데이터 형식")
+    st.markdown(
+        """
+        두 가지 형식을 모두 지원합니다. 같은 의미의 컬럼이면 섞어 써도 됩니다.
+
+        | 항목 | Type A — 기본 | Type B — 펼친 형식 |
+        | --- | --- | --- |
+        | 연령 | `연령` (숫자) | `나이` · `Age` 도 인식 · 없어도 분석 가능 |
+        | 수술시간 | `수술시간` (분 단위 숫자) | `절개시간` + `봉합시간` (시각) → 자동 계산 |
+        | 간호중재 | `간호중재` — `통증관리, 체위변경` 처럼 쉼표로 구분 | `간호중재1`, `간호중재2`, … 열마다 하나씩 |
+        """
+    )

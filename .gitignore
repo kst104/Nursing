@@ -1,0 +1,23 @@
+# 환자 식별정보가 포함될 수 있는 자료는 저장소에 커밋하지 않는다
+reports/
+exports/
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+!.claude/skills/**/references/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+
+# 인증 비밀키 — 절대 커밋 금지
+.streamlit/secrets.toml
+**/.streamlit/secrets.toml
+!**/.streamlit/secrets.toml.example
+
+# pyvis 가 네트워크 그래프를 그릴 때 실행 디렉터리에 만드는 JS 사본
+N-Map_Deploy/lib/
